@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Auth App</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/axios/1.7.7/axios.min.js"></script>
+  </head>
+  <body>
+    <div id="auth-container">
+      <!-- Content will be injected here dynamically -->
+    </div>
+
+    <div>
+      User information:
+      <div id="information"></div>
+    </div>
+
+    <script>
+      async function signup() {
+        const username = document.getElementById("signup-username").value;
+        const password = document.getElementById("signup-password").value;
+
+        const response = await axios.post("http://localhost:3000/signup", {
+          username: username,
+          password: password,
+        });
+        alert("Signed up successfully");
+        checkAuth();
+      }
+
+      async function logout() {
+        localStorage.removeItem("token");
+        alert("Logged out successfully");
+        checkAuth();
+      }
+      async function signin() {
+        const username = document.getElementById("signin-username").value;
+        const password = document.getElementById("signin-password").value;
+
+        const response = await axios.post("http://localhost:3000/signin", {
+          username: username,
+          password: password,
+        });
+
+        localStorage.setItem("token", response.data.token);
+        alert("Signed in successfully");
+        checkAuth();
+      }
+
+      async function getUserInformation() {
+        const token = localStorage.getItem("token");
+
+        if (token) {
+          try {
+            const response = await axios.get("http://localhost:3000/me", {
+              headers: { Authorization: `Bearer ${token}` },
+            });
+            document.getElementById("information").innerHTML =
+              "Hello, " + response.data.username;
+          } catch (error) {
+            console.error("Error fetching user info:", error);
+          }
+        } else {
+          document.getElementById("information").innerHTML = "";
+        }
+      }
+
+      function checkAuth() {
+        const token = localStorage.getItem("token");
+        const authContainer = document.getElementById("auth-container");
+
+        if (token) {
+          // Show logout button if user is logged in
+          authContainer.innerHTML = `
+                    <button onclick="logout()">Logout</button>
+                `;
+          getUserInformation();
+        } else {
+          // Show signup/signin forms if user is not logged in
+          authContainer.innerHTML = `
+                    <div>
+                        Signup
+                        <input type="text" id="signup-username" placeholder="Username">
+                        <input type="password" id="signup-password" placeholder="Password">
+                        <button onclick="signup()">Submit</button>
+                    </div>
+                    <div>
+                        Signin
+                        <input type="text" id="signin-username" placeholder="Username">
+                        <input type="password" id="signin-password" placeholder="Password">
+                        <button onclick="signin()">Submit</button>
+                    </div>
+                `;
+        }
+      }
+
+      // Call checkAuth when page loads
+      checkAuth();
+    </script>
+  </body>
+</html>
